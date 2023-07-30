@@ -1,0 +1,52 @@
+---
+ls:
+  .adoc: kebab-case | SCREAMING_SNAKE_CASE
+  .puml: kebab-case
+  .md: kebab-case | SCREAMING_SNAKE_CASE
+
+  .conf: kebab-case
+  .go: snake_case
+  .json: kebab-case
+  .rb: kebab-case
+  .tf: kebab-case
+  .yml: kebab-case
+  .yaml: kebab-case
+
+  .sh: kebab-case
+
+  .css: kebab-case
+  .html: kebab-case
+  .js: kebab-case
+  .hbs: kebab-case
+  .svg: kebab-case
+
+  Dockerfile: PascalCase
+  Vagrantfile: PascalCase
+  Jenkinsfile: PascalCase
+
+  .env: lowercase
+  .folderslintrc: lowercase
+  .shellcheckrc: lowercase
+  .gitignore: lowercase
+  .gitkeep: lowercase
+
+ignore:
+  # globals
+  - .git
+  - .idea
+  - .vscode
+  - node_modules
+  - .gitpod.yml
+  - target
+
+  # linter definitions
+  - .adoc-links.json
+  - .ls-lint.yml
+  - .yamllint.yml
+  - resources/sync/linters
+
+  # antora ui bundle
+  - src/main/ui-blog/.gulp.json
+  - src/main/ui-blog/src/js/vendor/highlight.bundle.js
+  - src/main/ui-docs/.gulp.json
+  - src/main/ui-docs/src/js/vendor/highlight.bundle.js

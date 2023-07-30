@@ -1,0 +1,39 @@
+{
+  "rules": [
+    ".github/workflows",
+
+    ".vscode",
+
+    "blog/modules/*/assets/attachments/**",
+    "blog/modules/*/assets/images/**",
+    "blog/modules/*/examples/*",
+    "blog/modules/*/examples/**",
+    "blog/modules/*/pages/*",
+    "blog/modules/*/pages/**",
+    "blog/modules/*/partials/*",
+    "blog/modules/*/partials/**",
+
+    "config/**",
+
+    "docs/modules/*/assets/attachments/**",
+    "docs/modules/*/assets/images/**",
+    "docs/modules/*/examples/*",
+    "docs/modules/*/examples/**",
+    "docs/modules/*/pages/*",
+    "docs/modules/*/pages/**",
+    "docs/modules/*/partials/*",
+    "docs/modules/*/partials/**",
+
+    "profile",
+
+    "src/main/**",
+    "src/test/**",
+
+    "resources/**",
+
+    "sites/**",
+
+    "node_modules/**",
+    "target/**"
+  ]
+}

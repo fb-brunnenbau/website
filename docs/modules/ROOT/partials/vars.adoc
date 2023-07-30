@@ -1,0 +1,7 @@
+Sebastian Sommerfeld <sebastian@sommerfeld.io>
+:project-name: website
+:url-project: https://github.com/fb-brunnenbau/{project-name}
+:github-actions-url: {url-project}/actions/workflows
+:job-ci: ci.yml
+:job-generate-docs: docs-as-code.yml
+:badge: badge.svg

@@ -1,0 +1,43 @@
+---
+site:
+  title: FB Brunnenbau Projects
+  url: /docs
+  start_page: website::index.adoc
+  robots: allow
+
+content:
+  branches: ['*', '!dependabot/*']
+  # tags: [v*]
+  sources:
+    - url: https://github.com/fb-brunnenbau/.github.git
+      start_path: docs
+    - url: https://github.com/fb-brunnenbau/website.git
+      start_path: docs
+
+asciidoc:
+  attributes:
+    kroki-fetch-diagram: true
+  extensions:
+    - asciidoctor-kroki
+
+antora:
+  extensions:
+    - require: '@antora/lunr-extension'
+      enabled: true
+      index_latest_only: true
+      snippet_length: 160
+
+ui:
+  bundle:
+    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
+    # url: https://github.com/sommerfeld-io/website-ui-bundle/releases/download/v0.1.9-SNAPSHOT/ui-bundle-0.1.9-SNAPSHOT.zip
+    # url: http://docker-host-gateway:7555/ui-bundle-docs.zip
+    snapshot: true
+
+output:
+  clean: true
+  dir: /tmp/antora/fb-brunnenbau/public
+
+runtime:
+  cache_dir: /tmp/antora/fb-brunnenbau/cache/antora
+  fetch: true

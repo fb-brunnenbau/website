@@ -1,0 +1,205 @@
+---
+name: Deploy + Release
+
+on:
+  workflow_dispatch:
+    # If the version is a v0.1.2-alpha or v0.1.2-beta, only this tag is
+    # published and latest remains unchanged.
+    inputs:
+      version:
+        description: Version (= new tag, e.g. v0.2.0)
+        required: true
+      publish:
+        type: boolean
+        description: If true, artifacts are published to DockerHub etc.
+        required: true
+        default: true
+
+env:
+  IMAGE: sommerfeldio/website
+
+permissions:
+  contents: read
+
+jobs:
+  validate-inputs:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Info
+        run: |
+          echo "Github Ref = ${{ github.ref }}"
+          echo "Github Event = ${{ github.event_name }}"
+          echo "Tag with version = ${{ github.event.inputs.version }}"
+          echo "Publish Artifacts = ${{ github.event.inputs.publish }}"
+        shell: bash
+      # - name: Checkout code
+      #   uses: actions/checkout@v3
+      - name: Validate version
+        uses: sommerfeld-io/semver-action@main
+        with:
+          command: validate ${{ github.event.inputs.version }}
+
+  update-version:
+    runs-on: ubuntu-latest
+    needs: validate-inputs
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Adjust version in antora.yml
+        uses: sebastian-sommerfeld-io/github-action-update-antora-yml@main
+        with:
+          git_ref: ${{ github.event.inputs.version }}
+      - name: Run yamllint for docs/antora.yml
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: docs/antora.yml
+      - name: Commit and push
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: sebastian
+          author_email: sebastian@sommerfeld.io
+          message: "[Actions Bot] auto-generated version"
+
+  release-tests:
+    runs-on: ubuntu-latest
+    needs: validate-inputs
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      # todo ... ... ... ... ... ... ... ... ... ... ... ... ... ... ...
+      # todo ... ... ... ... ... ... ... ... ... ... ... ... ... ... ...
+
+  deploy-dockerhub:
+    runs-on: ubuntu-latest
+    needs: ['update-version', 'release-tests']
+    steps:
+      - name: Login to DockerHub
+        if: github.event.inputs.publish == 'true'
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Deploy to DockerHub
+        if: github.event.inputs.publish == 'true'
+        run: |
+          VERSION_TAG="${{ github.event.inputs.version }}"
+          VERSION_TAG="${VERSION_TAG:1}"
+          docker pull "$IMAGE:ci"
+
+          docker tag "$IMAGE:ci" "$IMAGE:latest"
+          docker tag "$IMAGE:ci" "$IMAGE:$VERSION_TAG"
+
+          if [[ "${{ github.event.inputs.version }}" != *"-alpha"* && "${{ github.event.inputs.version }}" != *"-beta"* ]]; then
+            docker push "$IMAGE:latest"
+          fi
+          docker push "$IMAGE:$VERSION_TAG"
+        shell: bash
+
+  validate-deploy-dockerhub:
+    runs-on: ubuntu-latest
+    needs: deploy-dockerhub
+    steps:
+      - name: Verify deployment to DockerHub
+        if: github.event.inputs.publish == 'true'
+        run: |
+          VERSION_TAG="${{ github.event.inputs.version }}"
+          VERSION_TAG="${VERSION_TAG:1}"
+
+          if [[ "${{ github.event.inputs.version }}" != *"-alpha"* && "${{ github.event.inputs.version }}" != *"-beta"* ]]; then
+            docker pull "$IMAGE:latest"
+          fi
+          docker pull "$IMAGE:$VERSION_TAG"
+        shell: bash
+
+  dockerhub-desc:
+    runs-on: ubuntu-latest
+    needs: validate-deploy-dockerhub
+    steps:
+      - name: Checkout code
+        if: github.event.inputs.publish == 'true'
+        uses: actions/checkout@v3
+      - name: Convert README from Asciidoc to Markdown for DockerHub description
+        if: github.event.inputs.publish == 'true'
+        run: |
+          sudo apt-get install -y pandoc asciidoc
+          asciidoc -b docbook README.adoc
+          pandoc -f docbook -t markdown_strict README.xml -o README.md
+        shell: bash
+      - name: Update DockerHub description
+        if: github.event.inputs.publish == 'true'
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ env.IMAGE }}
+          short-description: ${{ github.event.repository.description }}
+          readme-filepath: ./README.md
+
+  github-tag-and-release:
+    runs-on: ubuntu-latest
+    needs: validate-deploy-dockerhub
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Create tag and Github release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN_REPO_AND_PROJECT }}
+        # If a matching git tag does not yet exist, it will automatically get created
+        # from the latest state of the default branch.
+        run: |
+          if [[ "${{ github.event.inputs.version }}" != *"-alpha"* && "${{ github.event.inputs.version }}" != *"-beta"* ]]; then
+            gh release create "${{ github.event.inputs.version }}" --generate-notes
+          else
+            gh release create "${{ github.event.inputs.version }}" --prerelease --generate-notes
+          fi
+        shell: bash
+
+  reset-version:
+    runs-on: ubuntu-latest
+    needs: github-tag-and-release
+    permissions:
+      contents: write
+    steps:
+        # CONSIDER THIS when checking out the latest code base:
+        # https://github.com/actions/checkout/issues/439#issuecomment-830862188
+        # The branch, tag or SHA to checkout. When checking out the repository that
+        # triggered a workflow, this defaults to the reference or SHA for that event.
+        # Otherwise, uses the default branch.
+        # To get the latest code base, the branch must be specified explicitely
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: main
+      - name: DEBUG SHA
+        run: git rev-parse --verify HEAD
+        shell: bash
+      - name: Adjust version in antora.yml
+        uses: sebastian-sommerfeld-io/github-action-update-antora-yml@main
+        with:
+          git_ref: refs/heads/main
+      - name: Run yamllint for docs/antora.yml
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: docs/antora.yml
+      - name: Commit and push
+        uses: EndBug/add-and-commit@v9.1.3
+        with:
+          author_name: sebastian
+          author_email: sebastian@sommerfeld.io
+          message: "[Actions Bot] auto-generated version"
+
+  on-failure:
+    runs-on: ubuntu-latest
+    needs: ['validate-inputs', 'update-version', 'release-tests', 'github-tag-and-release', 'reset-version', 'deploy-dockerhub', 'dockerhub-desc', 'validate-deploy-dockerhub']
+    if: failure()
+    steps:
+      - name: Send Pipeline Status to Google Chat
+        if: always()
+        uses: Co-qn/google-chat-notification@releases/v1
+        with:
+          name: ${{ github.workflow }}
+          url: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
+          status: failure
