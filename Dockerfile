@@ -60,13 +60,13 @@
 FROM antora/antora:3.1.4 AS build-antora
 LABEL maintainer="sebastian@sommerfeld.io"
 
+COPY docs /docs
+WORKDIR /docs
+
 RUN yarn add @asciidoctor/core@~3.0.2 \
     && yarn add asciidoctor-kroki@~0.17.0 \
     && yarn add @antora/lunr-extension@~1.0.0-alpha.8
 
-COPY docs /docs
-
-WORKDIR /docs
 RUN antora --version \
     && antora playbook.yml --stacktrace --clean --fetch
 
