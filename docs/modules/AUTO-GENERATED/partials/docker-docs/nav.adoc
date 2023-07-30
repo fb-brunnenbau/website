@@ -1,0 +1,1 @@
+* `xref:AUTO-GENERATED:docker-docs/dockerfile-docker-docs.adoc[Dockerfile]`

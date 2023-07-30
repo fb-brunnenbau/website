@@ -1,0 +1,1 @@
+* `xref:AUTO-GENERATED:bash-docs/build-and-run-sh.adoc[build-and-run.sh]`
