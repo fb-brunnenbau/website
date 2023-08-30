@@ -37,16 +37,10 @@ ignore:
   - .vscode
   - node_modules
   - .gitpod.yml
+  - .pre-commit-config.yaml
   - target
 
   # linter definitions
   - .adoc-links.json
   - .ls-lint.yml
   - .yamllint.yml
-  - resources/sync/linters
-
-  # antora ui bundle
-  - src/main/ui-blog/.gulp.json
-  - src/main/ui-blog/src/js/vendor/highlight.bundle.js
-  - src/main/ui-docs/.gulp.json
-  - src/main/ui-docs/src/js/vendor/highlight.bundle.js
