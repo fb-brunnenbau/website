@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   call-workflow:
-    uses: fb-brunnenbau/.github/.github/workflows/housekeeping-repo.yml@main
+    uses: sommerfeld-io/.github/.github/workflows/housekeeping-repo.yml@main
 
   on-failure:
     runs-on: ubuntu-latest
