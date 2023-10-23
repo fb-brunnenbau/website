@@ -94,7 +94,7 @@ RUN sleep 5
 
 
 
-FROM httpd:2.4.57-alpine3.18 AS run
+FROM httpd:2.4.58-alpine3.18 AS run
 LABEL maintainer="sebastian@sommerfeld.io"
 
 ARG USER=www-data
