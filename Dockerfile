@@ -57,7 +57,7 @@
 # ``www-data`` user,
 
 
-FROM antora/antora:3.1.4 AS build-antora
+FROM antora/antora:3.1.5 AS build-antora
 LABEL maintainer="sebastian@sommerfeld.io"
 
 COPY docs /docs
